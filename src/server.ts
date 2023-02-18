@@ -29,95 +29,93 @@ export const runServer = (settings: Settings) => {
 
   const git = simpleGit(dirPath);
 
-  (async () => {
-    let beforeFollowingIdSet = new Set<string>();
-    let followingIdSet = new Set<string>();
+  let beforeFollowingIdSet = new Set<string>();
+  let followingIdSet = new Set<string>();
 
-    if (isExistFile()) {
-      const currentFollowingIdList: string[] = JSON.parse(
-        fs.readFileSync(filePath, 'utf8')
-      );
+  if (isExistFile()) {
+    const currentFollowingIdList: string[] = JSON.parse(
+      fs.readFileSync(filePath, 'utf8')
+    );
 
-      if (
-        !Array.isArray(currentFollowingIdList) ||
-        (currentFollowingIdList.length &&
-          typeof currentFollowingIdList[0] !== 'string')
-      ) {
-        throw Error('Invalid json');
-      }
-
-      beforeFollowingIdSet = new Set(currentFollowingIdList);
+    if (
+      !Array.isArray(currentFollowingIdList) ||
+      (currentFollowingIdList.length &&
+        typeof currentFollowingIdList[0] !== 'string')
+    ) {
+      throw Error('Invalid json');
     }
 
-    console.log('📼 Nostr Rorubakku');
+    beforeFollowingIdSet = new Set(currentFollowingIdList);
+  }
 
-    settings.relays.forEach(async (url) => {
-      const relay = relayInit(url);
-      await relay.connect().catch(() => null);
+  console.log('📼 Nostr Rorubakku');
 
-      relay.sub([filter]).on('event', (ev: Event) => {
-        ev.tags.forEach((tagList) => {
-          followingIdSet.add(tagList[1]);
-        });
+  settings.relays.forEach(async (url) => {
+    const relay = relayInit(url);
+    await relay.connect().catch(() => null);
+
+    relay.sub([filter]).on('event', (ev: Event) => {
+      ev.tags.forEach((tagList) => {
+        followingIdSet.add(tagList[1]);
       });
     });
+  });
 
-    const writeFile = async () => {
-      const followingIdList = [...followingIdSet];
-      if (followingIdList.length < 1) return false;
+  const writeFile = async () => {
+    const followingIdList = [...followingIdSet];
+    if (followingIdList.length < 1) return false;
 
-      const beforeFollowingIdList = [...beforeFollowingIdSet];
+    const beforeFollowingIdList = [...beforeFollowingIdSet];
 
-      const strFollowingIdList = JSON.stringify(followingIdList);
+    const strFollowingIdList = JSON.stringify(followingIdList);
 
-      if (JSON.stringify(beforeFollowingIdList) === strFollowingIdList) {
-        return false;
-      }
+    if (JSON.stringify(beforeFollowingIdList) === strFollowingIdList) {
+      return false;
+    }
 
-      fs.writeFileSync(filePath, strFollowingIdList);
+    fs.writeFileSync(filePath, strFollowingIdList);
 
-      const generateCommitMessage = () => {
-        if (beforeFollowingIdSet.size === 0) {
-          return `Added ${followingIdSet.size} following users.`;
-        } else {
-          const addedUsers = followingIdList.filter(
-            (id) => beforeFollowingIdList.indexOf(id) === -1
-          );
-          const removedUsers = beforeFollowingIdList.filter(
-            (id) => followingIdList.indexOf(id) === -1
-          );
+    const generateCommitMessage = () => {
+      if (beforeFollowingIdSet.size === 0) {
+        return `Added ${followingIdSet.size} following users.`;
+      } else {
+        const addedUsers = followingIdList.filter(
+          (id) => beforeFollowingIdList.indexOf(id) === -1
+        );
+        const removedUsers = beforeFollowingIdList.filter(
+          (id) => followingIdList.indexOf(id) === -1
+        );
 
-          let message = '';
+        let message = '';
 
-          if (addedUsers.length) {
-            message += `Added ${addedUsers.join(',')}`;
-          }
-          if (removedUsers.length) {
-            if (message) {
-              message += '. ';
-            }
-            message += `Removed ${removedUsers.join(',')}`;
-          }
-
-          return message;
+        if (addedUsers.length) {
+          message += `Added ${addedUsers.join(',')}`;
         }
-      };
+        if (removedUsers.length) {
+          if (message) {
+            message += '. ';
+          }
+          message += `Removed ${removedUsers.join(',')}`;
+        }
 
-      const commitMessage = generateCommitMessage();
-
-      beforeFollowingIdSet = followingIdSet;
-      followingIdSet = new Set();
-
-      await git.add(FILE_NAME);
-      await git.commit(commitMessage, FILE_NAME);
-
-      console.log(commitMessage);
-
-      return true;
+        return message;
+      }
     };
 
-    setInterval(async () => {
-      await writeFile();
-    }, settings.updateIntervalMs);
-  })();
+    const commitMessage = generateCommitMessage();
+
+    beforeFollowingIdSet = followingIdSet;
+    followingIdSet = new Set();
+
+    await git.add(FILE_NAME);
+    await git.commit(commitMessage, FILE_NAME);
+
+    console.log(commitMessage);
+
+    return true;
+  };
+
+  setInterval(async () => {
+    await writeFile();
+  }, settings.updateIntervalMs);
 };
