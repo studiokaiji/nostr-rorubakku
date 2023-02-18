@@ -1,0 +1,11 @@
+{
+  "updateIntervalMs": 5000,
+  "relays": [
+    "wss://eden.nostr.land",
+    "wss://relay.nostr.info",
+    "wss://nos.lol",
+    "wss://nostr.mom"
+  ],
+  "gitDirectoryPath": "./rorubakku",
+  "authors": ["2d417bce8c10883803bc427703e3c4c024465c88e7063ed68f9dfeecf56911ac"]
+}
