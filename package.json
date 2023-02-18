@@ -1,5 +1,5 @@
 {
-  "name": "nostr-rorubakku",
+  "name": "@studiokaiji/nostr-rorubakku",
   "version": "0.0.1",
   "license": "MIT",
   "devDependencies": {
@@ -21,7 +21,7 @@
     "build": "tsc"
   },
   "bin": {
-    "setup": "aaa ./dist/index.js"
+    "rorubakku": "./dist/index.js"
   },
   "module": "node"
 }

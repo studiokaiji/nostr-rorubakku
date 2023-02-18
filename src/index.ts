@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { getSettings } from './getSettings';
 import { runServer } from './server';
 import { setup } from './setup';
