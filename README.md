@@ -21,7 +21,7 @@ rorubakku run
 A settings file can be specified when executing the `setup` and `run` commands.
 
 ```sh
-rorubakku -s <CUSTOM_SETTINGS_FILE_PATH>
+rorubakku run -s <CUSTOM_SETTINGS_FILE_PATH>
 ```
 
 The Settings file should be written as follows. If no Settings file is specified, the following settings are used by default.
